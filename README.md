@@ -1,7 +1,39 @@
 # Excel Normalizer Agent
 
-An AI-powered tool that generates documented Python transformation scripts to normalize
-raw/formatted Excel files into clean tabular data.
+**Transform messy Excel files into clean, normalized data with an Agent.**
+
+Scale the data transformation process! Describe what you want in natural language, and let the AI agent generate a documented, reusable transformation pipeline.
+
+---
+
+## Why This Tool?
+
+Data teams spend countless hours wrangling Excel files from different sources:
+- Sales reports with merged cells and subtotals
+- Vendor data with months spread across columns
+- Legacy exports with inconsistent formatting
+
+**Traditional approach:** Write custom pandas code for each file format. Time-consuming, error-prone, and hard to maintain.
+
+**With Excel Normalizer Agent:**
+1. Upload your messy file + show the target format
+2. Describe the transformation in natural language
+3. Get a working Python script + editable transformation plan
+4. Reuse and adapt for similar files
+
+---
+
+## Key Features
+
+| Feature | Benefit |
+|---------|---------|
+| **Natural Language Instructions** | Describe transformations in plain English — no coding required to start |
+| **Human-in-the-Loop Review** | Preview results before saving; iterate until it's right |
+| **Editable Transformation Plans** | YAML-based plans you can version control, edit, and reuse |
+| **Standalone Python Scripts** | Generated code runs anywhere — no vendor lock-in |
+| **Step-by-Step Documentation** | Every transformation is documented for future reference |
+
+---
 
 ## How It Works
 
@@ -36,174 +68,123 @@ Raw Excel + Template + Instructions
    transform.py + transform_plan.yaml + transform_doc.md
 ```
 
-## Setup
+---
+
+## Quick Start
+
+### 1. Setup
 
 ```bash
+# Clone the repository
+git clone https://github.com/GGFUGG05/excel-normalizer-agent.git
+cd excel-normalizer-agent
+
 # Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-# or
-venv\Scripts\activate  # Windows
+venv\Scripts\activate     # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set your API key (option 1: environment variable)
-export ANTHROPIC_API_KEY=your-key-here  # Linux/Mac
-set ANTHROPIC_API_KEY=your-key-here     # Windows
-
-# Set your API key (option 2: .env file)
+# Set your API key
 cp .env.example .env
-# Then edit .env and add your key
+# Edit .env and add your Anthropic API key
 ```
 
-You can also enter your API key directly in the Streamlit sidebar when running the app.
-
-## Usage
+### 2. Run
 
 ```bash
 streamlit run app.py
 ```
 
-Then in the browser:
+### 3. Transform
 
-1. **Upload** your raw Excel file, target template, and (optionally) example output rows
-2. **Write instructions** describing the transformation logic
-3. **Review the plan** — the agent shows its understanding and step-by-step plan
-4. **Edit if needed** — type natural language feedback or toggle to edit the YAML directly
-5. **Generate code** — the agent creates a Python script
-6. **Review results** — the script executes and you see the output preview
-   - **Approve & Save** — save all artifacts if the output looks correct
-   - **Edit Plan** — go back to modify the transformation plan
-   - **Regenerate Code** — generate a new script from the current plan
-7. **Download** the script, plan YAML, and documentation
+1. **Upload** your raw Excel file and target template
+2. **Describe** what needs to happen (e.g., "unpivot month columns, extract package size from product name")
+3. **Review** the generated plan and adjust if needed
+4. **Execute** and preview the results
+5. **Download** your transformation script and documentation
+
+---
 
 ## Example: Coca-Cola Sellout Transformation
 
 See [`examples/coca-cola-mockup/`](examples/coca-cola-mockup/) for a complete working example.
 
-**The Problem:** Wide-format sellout data with months as columns and package quantity embedded in product names.
+**Before:** Wide-format sellout data with months as columns
 
 | Product Name | Product Code | POS Code | Jan | Feb | ... |
 |--------------|--------------|----------|-----|-----|-----|
 | Coca-Cola PET 50cl x 24 | CC-PET50-24 | POS-001 | 100 | 150 | ... |
 
-**The Solution:** The agent generates a script that:
-1. Extracts package quantity ("24") from product name
-2. Unpivots month columns into rows
-3. Converts month names to numbers (Jan=1, Feb=2, ...)
-
-**The Result:** Normalized long-format table (15 rows × 12 months = 180 rows)
+**After:** Normalized long-format table (15 rows x 12 months = 180 rows)
 
 | productname | productcode | numperpackage | poscode | month | amount |
 |-------------|-------------|---------------|---------|-------|--------|
 | Coca-Cola PET 50cl | CC-PET50-24 | 24 | POS-001 | 1 | 100 |
 
-Run the example:
+**What the agent figured out:**
+- Extract package quantity ("x 24") from product name
+- Unpivot 12 month columns into rows
+- Convert month names to numbers (Jan=1, Feb=2, ...)
+- Cast all columns to appropriate types
+
 ```bash
+# Run the example
 cd examples/coca-cola-mockup/output
 python transform.py
 ```
 
-## Project Structure
-
-```
-excel-normalizer-agent/
-├── app.py                          # Streamlit UI
-├── config.py                       # Settings (model, timeouts, paths)
-├── requirements.txt
-│
-├── agent/
-│   ├── agent.py                    # Core orchestrator (plan, codegen, execute)
-│   ├── tools/
-│   │   ├── excel_analyzer.py       # Tool: profile Excel files
-│   │   ├── code_executor.py        # Tool: run generated scripts
-│   │   └── output_comparator.py    # Tool: compare outputs (utility)
-│   └── prompts/
-│       └── system.py               # System prompts for each phase
-│
-├── models/
-│   └── transform_plan.py           # Pydantic models (TransformPlan, FileProfile, etc.)
-│
-├── examples/                       # Working examples with input/output
-│   └── coca-cola-mockup/
-│       ├── input/                  # Sample input files
-│       └── output/                 # Generated script, plan, and result
-│
-├── input/                          # Uploaded files (auto-created, gitignored)
-├── output/                         # Generated artifacts per job (gitignored)
-│   └── <job_name>/
-│       ├── transform.py            # Standalone transformation script
-│       ├── transform_plan.yaml     # Editable plan (source of truth)
-│       ├── transform_doc.md        # Human-readable documentation
-│       └── output.xlsx             # Transformed output
-```
+---
 
 ## The Transformation Plan
 
-The plan is the **source of truth** — a structured YAML file that describes every
-transformation step. This design means:
+The plan is the **source of truth** — a structured YAML file that describes every transformation step. This design means:
 
-- **Humans can read it**: Each step has a plain-English description
-- **Humans can edit it**: Modify the YAML and re-run codegen without the LLM
-- **It's version-controllable**: Track changes to transformation logic in git
-- **It's reusable**: Copy and adapt plans for similar files
+- **Readable**: Each step has a plain-English description
+- **Editable**: Modify the YAML directly without regenerating
+- **Version-controllable**: Track changes in git
+- **Reusable**: Copy and adapt plans for similar files
 
 ### Example Plan
 
 ```yaml
 source_description: >
-  Product sellout file at POS level. Each POS has a header row
-  followed by SKU detail rows with monthly columns.
+  Wide-format sellout report with monthly columns
 
 target_description: >
-  One row per SKU × outlet × month with columns:
-  outlet_name, sku_code, sku_name, month, sellout
-
-assumptions:
-  - POS header rows identified by having only column A populated
-  - Month columns follow pattern like 'Jan-24', 'Feb-24'
+  One row per SKU × outlet × month
 
 steps:
   - step: 1
-    action: detect_group_headers
-    description: Identify POS header rows where only column A has a value
+    action: split_column
+    description: Extract package quantity from Product Name
     params:
-      detection_rule: "row where columns[1:] are all NaN"
-      extract_field: outlet_name
+      source: Product Name
+      delimiter: ' x '
+      into: [productname, numperpackage]
 
   - step: 2
-    action: forward_fill_group
-    description: Assign each SKU row to its parent POS
-    params:
-      field: outlet_name
-
-  - step: 3
     action: unpivot
     description: Melt month columns into rows
     params:
-      id_vars: [outlet_name, sku_code, sku_name]
+      id_vars: [productname, productcode, poscode]
       var_name: month
-      value_name: sellout
+      value_name: amount
 ```
 
-## Plan Editing Options
+### Editing Options
 
-### Natural Language Feedback
-> "Step 1 is wrong — the POS header is not identified by empty columns,
-> it's any row where column A starts with 'Store:'"
+| Method | Best For |
+|--------|----------|
+| **Natural Language Feedback** | "Step 1 is wrong — the header is in row 3, not row 1" |
+| **Direct YAML Editing** | Precise parameter changes without LLM round-trip |
+| **Offline Editing** | Edit `.yaml` files in any text editor and re-upload |
 
-The agent revises the plan and shows you the updated version.
+---
 
-### Direct YAML Editing
-Toggle "Edit plan directly" in the UI to modify the YAML. Useful for
-precise parameter changes without going through the LLM.
-
-### Offline Editing
-Plans are saved as `.yaml` files. You can edit them in any text editor
-and re-upload, or use them as templates for new transformations.
-
-## Supported Transformation Actions
+## Supported Transformations
 
 | Action | Description |
 |--------|-------------|
@@ -220,10 +201,71 @@ and re-upload, or use them as templates for new transformations.
 | `add_column` | Add computed or constant column |
 | `custom` | Free-form transformation logic |
 
+---
+
+## Project Structure
+
+```
+excel-normalizer-agent/
+├── app.py                    # Streamlit UI
+├── config.py                 # Settings (model, timeouts)
+├── requirements.txt
+│
+├── agent/
+│   ├── agent.py              # Core orchestrator
+│   ├── tools/                # Excel analysis, code execution
+│   └── prompts/              # System prompts for each phase
+│
+├── models/
+│   └── transform_plan.py     # Pydantic models
+│
+├── examples/                 # Working examples
+│   └── coca-cola-mockup/
+│
+├── input/                    # Uploaded files (gitignored)
+└── output/                   # Generated artifacts (gitignored)
+```
+
+---
+
 ## Configuration
 
-Edit `config.py` to change:
-- `MODEL_NAME`: Default is `claude-haiku-4-5-20251001` (cost-efficient)
-- `EXECUTION_TIMEOUT`: Script execution timeout in seconds
-- `MAX_RETRIES`: Retry count for failed validation
-- `MAX_SAMPLE_ROWS`: Rows to sample during analysis
+Edit `config.py` to customize:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `MODEL_NAME` | `claude-haiku-4-5-20251001` | Model to use |
+| `EXECUTION_TIMEOUT` | 120 | Script execution timeout (seconds) |
+| `MAX_RETRIES` | 3 | Retry count for failed operations |
+| `MAX_SAMPLE_ROWS` | 50 | Rows to sample during analysis |
+
+---
+
+## Use Cases
+
+- **Sales & Marketing**: Normalize sellout reports from different retailers
+- **Finance**: Transform bank statements and transaction exports
+- **Supply Chain**: Standardize vendor data feeds
+- **Analytics**: Prepare data for dashboards and BI tools
+- **Data Migration**: Convert legacy Excel formats to modern schemas
+
+---
+
+## Tech Stack
+
+- **Frontend**: Streamlit
+- **AI**: Claude (Anthropic) via LangChain - can be adapted to other LLMs
+- **Data Processing**: pandas, openpyxl
+- **Validation**: Pydantic
+
+---
+
+## License
+
+MIT
+
+---
+
+## Contributing
+
+Contributions welcome! Please open an issue to discuss major changes before submitting a PR.

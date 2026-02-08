@@ -78,6 +78,33 @@ Then in the browser:
    - **Regenerate Code** — generate a new script from the current plan
 7. **Download** the script, plan YAML, and documentation
 
+## Example: Coca-Cola Sellout Transformation
+
+See [`examples/coca-cola-mockup/`](examples/coca-cola-mockup/) for a complete working example.
+
+**The Problem:** Wide-format sellout data with months as columns and package quantity embedded in product names.
+
+| Product Name | Product Code | POS Code | Jan | Feb | ... |
+|--------------|--------------|----------|-----|-----|-----|
+| Coca-Cola PET 50cl x 24 | CC-PET50-24 | POS-001 | 100 | 150 | ... |
+
+**The Solution:** The agent generates a script that:
+1. Extracts package quantity ("24") from product name
+2. Unpivots month columns into rows
+3. Converts month names to numbers (Jan=1, Feb=2, ...)
+
+**The Result:** Normalized long-format table (15 rows × 12 months = 180 rows)
+
+| productname | productcode | numperpackage | poscode | month | amount |
+|-------------|-------------|---------------|---------|-------|--------|
+| Coca-Cola PET 50cl | CC-PET50-24 | 24 | POS-001 | 1 | 100 |
+
+Run the example:
+```bash
+cd examples/coca-cola-mockup/output
+python transform.py
+```
+
 ## Project Structure
 
 ```
@@ -98,8 +125,13 @@ excel-normalizer-agent/
 ├── models/
 │   └── transform_plan.py           # Pydantic models (TransformPlan, FileProfile, etc.)
 │
-├── input/                          # Uploaded files (auto-created)
-├── output/                         # Generated artifacts per job
+├── examples/                       # Working examples with input/output
+│   └── coca-cola-mockup/
+│       ├── input/                  # Sample input files
+│       └── output/                 # Generated script, plan, and result
+│
+├── input/                          # Uploaded files (auto-created, gitignored)
+├── output/                         # Generated artifacts per job (gitignored)
 │   └── <job_name>/
 │       ├── transform.py            # Standalone transformation script
 │       ├── transform_plan.yaml     # Editable plan (source of truth)

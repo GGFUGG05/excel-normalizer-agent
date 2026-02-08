@@ -10,7 +10,7 @@ Raw Excel + Template + Instructions
         │
         ▼
    ┌─────────┐
-   │ ANALYZE  │  Agent profiles all input files
+   │ ANALYZE │  Agent profiles all input files
    └────┬────┘
         ▼
    ┌─────────┐
@@ -25,9 +25,13 @@ Raw Excel + Template + Instructions
    │ CODEGEN │  Agent generates a standalone pandas script
    └────┬────┘
         ▼
-   ┌──────────┐
-   │ VALIDATE │  Script is executed and output is compared to example
-   └────┬─────┘
+   ┌─────────┐
+   │ EXECUTE │  Script runs directly, output previewed in UI
+   └────┬────┘
+        ▼
+   ┌─────────┐
+   │ APPROVE │  You review results: Approve, Edit Plan, or Regenerate
+   └────┬────┘
         ▼
    transform.py + transform_plan.yaml + transform_doc.md
 ```
@@ -37,14 +41,23 @@ Raw Excel + Template + Instructions
 ```bash
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate  # Linux/Mac
+# or
+venv\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set your API key
-export ANTHROPIC_API_KEY=your-key-here
+# Set your API key (option 1: environment variable)
+export ANTHROPIC_API_KEY=your-key-here  # Linux/Mac
+set ANTHROPIC_API_KEY=your-key-here     # Windows
+
+# Set your API key (option 2: .env file)
+cp .env.example .env
+# Then edit .env and add your key
 ```
+
+You can also enter your API key directly in the Streamlit sidebar when running the app.
 
 ## Usage
 
@@ -58,8 +71,12 @@ Then in the browser:
 2. **Write instructions** describing the transformation logic
 3. **Review the plan** — the agent shows its understanding and step-by-step plan
 4. **Edit if needed** — type natural language feedback or toggle to edit the YAML directly
-5. **Approve** — the agent generates a Python script
-6. **Download** the script, plan YAML, and documentation
+5. **Generate code** — the agent creates a Python script
+6. **Review results** — the script executes and you see the output preview
+   - **Approve & Save** — save all artifacts if the output looks correct
+   - **Edit Plan** — go back to modify the transformation plan
+   - **Regenerate Code** — generate a new script from the current plan
+7. **Download** the script, plan YAML, and documentation
 
 ## Project Structure
 
@@ -70,11 +87,11 @@ excel-normalizer-agent/
 ├── requirements.txt
 │
 ├── agent/
-│   ├── agent.py                    # Core orchestrator (plan, codegen, validate)
+│   ├── agent.py                    # Core orchestrator (plan, codegen, execute)
 │   ├── tools/
 │   │   ├── excel_analyzer.py       # Tool: profile Excel files
 │   │   ├── code_executor.py        # Tool: run generated scripts
-│   │   └── output_comparator.py    # Tool: compare actual vs expected output
+│   │   └── output_comparator.py    # Tool: compare outputs (utility)
 │   └── prompts/
 │       └── system.py               # System prompts for each phase
 │

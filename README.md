@@ -19,7 +19,7 @@ Data teams spend countless hours wrangling Excel files from different sources:
 1. Upload your messy file + show the target format
 2. Describe the transformation in natural language
 3. Get a working Python script + editable transformation plan
-4. Reuse and adapt for similar files
+4. **Re-run on new files** — select a saved project, upload new files, and execute instantly with no LLM needed
 
 ---
 
@@ -31,6 +31,7 @@ Data teams spend countless hours wrangling Excel files from different sources:
 | **Human-in-the-Loop Review** | Preview results before saving; iterate until it's right |
 | **Editable Transformation Plans** | YAML-based plans you can version control, edit, and reuse |
 | **Standalone Python Scripts** | Generated code runs anywhere — no vendor lock-in |
+| **Run Existing Projects** | Re-run saved transformations on new files — no LLM needed, batch upload supported |
 | **Step-by-Step Documentation** | Every transformation is documented for future reference |
 
 ---
@@ -68,6 +69,32 @@ Raw Excel + Template + Instructions
    transform.py + transform_plan.yaml + transform_doc.md
 ```
 
+### Run Existing Mode
+
+Once you've created a transformation project, you can re-run it on new files without any LLM calls:
+
+```
+Sidebar: "Run Existing" mode
+         │
+         ▼
+Scan output/ → dropdown of saved projects (with transform.py)
+         │
+         ▼
+Pick project → see plan summary from YAML
+         │
+         ▼
+Upload one or more raw files (batch)
+         │
+         ▼
+[Run Transformation] → executes saved transform.py per file
+         │
+         ▼
+Results: per-file status + preview + download
+         Output: output/{project}/output_{name}_{timestamp}.xlsx
+```
+
+This is useful when the same file format arrives regularly (e.g., monthly reports) — build the transformation once, then re-run on each new batch.
+
 ---
 
 ## Quick Start
@@ -98,13 +125,20 @@ cp .env.example .env
 streamlit run app.py
 ```
 
-### 3. Transform
+### 3. Transform (New)
 
 1. **Upload** your raw Excel file and target template
 2. **Describe** what needs to happen (e.g., "unpivot month columns, extract package size from product name")
 3. **Review** the generated plan and adjust if needed
 4. **Execute** and preview the results
 5. **Download** your transformation script and documentation
+
+### 4. Re-Run on New Files
+
+1. Switch to **"Run Existing"** mode in the sidebar
+2. **Select** a saved project from the dropdown
+3. **Upload** one or more new raw files
+4. **Click** "Run Transformation" — outputs are saved with timestamps into the project folder
 
 ---
 
@@ -212,7 +246,7 @@ excel-normalizer-agent/
 ├── requirements.txt
 │
 ├── agent/
-│   ├── agent.py              # Core orchestrator
+│   ├── agent.py              # Core orchestrator (plan, codegen, validate, re-run)
 │   ├── tools/                # Excel analysis, code execution
 │   └── prompts/              # System prompts for each phase
 │

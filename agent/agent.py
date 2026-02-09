@@ -309,6 +309,52 @@ def validate_transform(
 
 
 # ---------------------------------------------------------------------------
+# Run existing project on new files
+# ---------------------------------------------------------------------------
+
+def run_existing_transform(
+    project_dir: str,
+    raw_files: list[str],
+    output_dir: str | None = None,
+) -> list[dict]:
+    """
+    Execute an existing project's transform.py against one or more raw files.
+
+    Args:
+        project_dir: Path to the project directory containing transform.py
+        raw_files: List of paths to raw input files
+        output_dir: Override output directory (defaults to project_dir)
+
+    Returns:
+        List of result dicts (one per file), each matching validate_transform() output
+        with an additional "input_file" key.
+    """
+    from datetime import datetime
+
+    project_path = Path(project_dir)
+    code_path = project_path / "transform.py"
+    if not code_path.exists():
+        return [{"success": False, "error": f"No transform.py found in {project_dir}",
+                 "stdout": None, "output_file": None, "preview": None, "input_file": f}
+                for f in raw_files]
+
+    code = code_path.read_text()
+    dest_dir = Path(output_dir) if output_dir else project_path
+
+    results = []
+    for raw_file in raw_files:
+        stem = Path(raw_file).stem
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_file = str(dest_dir / f"output_{stem}_{timestamp}.xlsx")
+
+        result = validate_transform(code=code, raw_file=raw_file, output_file=output_file)
+        result["input_file"] = raw_file
+        results.append(result)
+
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Utility: Save outputs
 # ---------------------------------------------------------------------------
 

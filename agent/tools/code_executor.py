@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import sys
 import subprocess
 import tempfile
 import json
@@ -28,25 +30,32 @@ def execute_transform_code(code: str, input_file: str, output_file: str) -> str:
         JSON string with execution result: success/failure, stdout, stderr,
         and first few rows of output if successful.
     """
-    # Write the code to a temp file
+    # Write the code to a temp file (use system default temp dir for cross-platform compat)
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".py", delete=False, dir="/tmp"
+        mode="w", suffix=".py", delete=False
     ) as f:
         f.write(code)
         script_path = f.name
 
     try:
+        # Build a minimal env that works on both Windows and Unix
+        env = {
+            "INPUT_FILE": input_file,
+            "OUTPUT_FILE": output_file,
+            "PATH": os.environ.get("PATH", ""),
+            "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),  # needed on Windows
+        }
+        # Propagate HOME / USERPROFILE so libraries can find config dirs
+        for key in ("HOME", "USERPROFILE", "TMPDIR", "TEMP", "TMP"):
+            if key in os.environ:
+                env[key] = os.environ[key]
+
         result = subprocess.run(
-            ["python", script_path],
+            [sys.executable, script_path],
             capture_output=True,
             text=True,
             timeout=EXECUTION_TIMEOUT,
-            env={
-                "INPUT_FILE": input_file,
-                "OUTPUT_FILE": output_file,
-                "PATH": "/usr/bin:/usr/local/bin",
-                "HOME": "/tmp",
-            },
+            env=env,
         )
 
         output = {

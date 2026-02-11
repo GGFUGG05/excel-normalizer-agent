@@ -7,3 +7,4 @@ pandas
 openpyxl
 pydantic>=2.0
 pyyaml
+python-dotenv

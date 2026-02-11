@@ -101,6 +101,8 @@ This is useful when the same file format arrives regularly (e.g., monthly report
 
 ### 1. Setup
 
+**Prerequisites:** Python 3.10+
+
 ```bash
 # Clone the repository
 git clone https://github.com/GGFUGG05/excel-normalizer-agent.git
@@ -115,7 +117,8 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 
 # Set your API key
-cp .env.example .env
+cp .env.example .env      # Linux/Mac
+copy .env.example .env    # Windows
 # Edit .env and add your Anthropic API key
 ```
 

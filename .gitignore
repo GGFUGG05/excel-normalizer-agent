@@ -13,3 +13,8 @@ venv/
 # IDE
 .vscode/
 .idea/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+nul

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 from pathlib import Path
 
 import yaml
@@ -250,7 +251,7 @@ def validate_transform(
 
     try:
         result = subprocess.run(
-            ["python", str(code_path)],
+            [sys.executable, str(code_path)],
             capture_output=True,
             text=True,
             env=env,

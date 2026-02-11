@@ -38,17 +38,12 @@ def execute_transform_code(code: str, input_file: str, output_file: str) -> str:
         script_path = f.name
 
     try:
-        # Build a minimal env that works on both Windows and Unix
-        env = {
-            "INPUT_FILE": input_file,
-            "OUTPUT_FILE": output_file,
-            "PATH": os.environ.get("PATH", ""),
-            "SYSTEMROOT": os.environ.get("SYSTEMROOT", ""),  # needed on Windows
-        }
-        # Propagate HOME / USERPROFILE so libraries can find config dirs
-        for key in ("HOME", "USERPROFILE", "TMPDIR", "TEMP", "TMP"):
-            if key in os.environ:
-                env[key] = os.environ[key]
+        # Inherit the full environment so the subprocess can find all
+        # installed packages (venv, conda, pyenv, etc.), then inject
+        # the input/output paths for the generated script.
+        env = os.environ.copy()
+        env["INPUT_FILE"] = input_file
+        env["OUTPUT_FILE"] = output_file
 
         result = subprocess.run(
             [sys.executable, script_path],

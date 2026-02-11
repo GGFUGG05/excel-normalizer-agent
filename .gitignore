@@ -9,6 +9,7 @@ __pycache__/
 *.pyc
 venv/
 .env
+.tmp_scripts/
 
 # IDE
 .vscode/

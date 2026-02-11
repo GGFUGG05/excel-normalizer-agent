@@ -30,9 +30,13 @@ def execute_transform_code(code: str, input_file: str, output_file: str) -> str:
         JSON string with execution result: success/failure, stdout, stderr,
         and first few rows of output if successful.
     """
-    # Write the code to a temp file (use system default temp dir for cross-platform compat)
+    # Write the script to a temp file inside the project directory rather than
+    # the system temp dir.  Corporate security tools (EDR/antivirus) are less
+    # likely to block execution of scripts within the user's workspace.
+    scripts_dir = Path(__file__).resolve().parent.parent.parent / ".tmp_scripts"
+    scripts_dir.mkdir(exist_ok=True)
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".py", delete=False
+        mode="w", suffix=".py", delete=False, dir=scripts_dir
     ) as f:
         f.write(code)
         script_path = f.name
